@@ -181,7 +181,7 @@ async function run(): Promise<void> {
 
     core.setOutput('articles', JSON.stringify(devtoArticles, undefined, 2))
     if (newlySyncedArticles.length > 0) {
-      core.setOutput('modified', newlySyncedArticles.join(' '))
+      core.setOutput('newly-sync-articles', newlySyncedArticles.join(' '))
     }
   } catch (error) {
     core.error(JSON.stringify(error))
