@@ -1,24 +1,40 @@
 name: 'build-test'
 on: # rebuild any PRs and main branch changes
-  pull_request:
   push:
     branches:
       - main
-      - 'releases/*'
 
 jobs:
   build: # make sure build/ci work properly
     runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
     steps:
-      - uses: actions/checkout@v2
+      - name: setup node project
+        uses: actions/checkout@v2
       - run: |
           npm install
-      - run: |
           npm run all
-  test: # make sure the action works on a clean machine without building
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./
+      - name: get modified files
+        id: files
+        uses: jitterbit/get-changed-files@v1
+      - name: output modified files to text
+        run: |
+          for changed_file in ${{ steps.files.outputs.added_modified }}; do
+            echo "${changed_file}" >> added_modified.txt
+          done
+      - name: dev.to action step
+        uses: ./
+        id: dev-to
         with:
-          milliseconds: 1000
+          api_key: ${{ secrets.api_key }}
+          added_modified_filepath: ./added_modified.txt
+      - name: write article id of DEV to articles of Zenn.
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add ${{ steps.dev-to.outputs.newly-sync-articles }}
+          git commit -m "sync: Zenn with DEV [skip ci]"
+          git push
+        if: steps.dev-to.outputs.newly-sync-articles
+      - name: Get the output articles.
+        run: echo "${{ steps.dev-to.outputs.articles }}"

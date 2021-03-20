@@ -1,11 +1,28 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Sync Zenn articles to DEV'
+description: 'Just sync Zenn articles to DEV.'
+author: 'nikaera'
 inputs:
-  milliseconds: # change this
+  api_key:
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+    description: 'The api_key required to use the DEV API (https://docs.forem.com/api/#section/Authentication)'
+  username:
+    required: false
+    description: "Zenn user's account name. (Fields to be filled in if canonical url is set.)"
+  articles:
+    required: false
+    description: "The directory where Zenn articles are stored."
+    default: articles
+  added_modified_filepath:
+    required: false
+    description: |
+      Synchronize only the articles in the file path divided by line breaks.
+      You can use jitterbit/get-changed-files@v1 to get only the file paths of articles that have changed in the correct format.
+      (https://github.com/jitterbit/get-changed-files)
+outputs:
+  articles:
+    description: 'A list of URLs of dev.to articles that have been created or updated'
+  newly-sync-articles:
+    description: 'File path list of newly synchronized articles.'
 runs:
   using: 'node12'
   main: 'dist/index.js'
