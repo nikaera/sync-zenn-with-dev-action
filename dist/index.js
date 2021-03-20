@@ -68,8 +68,8 @@ function run() {
                 required: false
             });
             if (modifiedFilePath) {
-                core.info(`added_modified.txt: ${modifiedFilePath}`);
                 const addedModified = yield fs_1.promises.readFile(modifiedFilePath, 'utf-8');
+                core.info(`[${modifiedFilePath}]\n${addedModified}`);
                 mdFiles = addedModified
                     .split('\n')
                     .filter(f => f.startsWith(articleDir) && f.endsWith('.md'));
@@ -79,7 +79,9 @@ function run() {
                     .filter(f => f.endsWith('.md'))
                     .map(f => `${articleDir}/${f}`);
             }
+            core.info(`[markdown files]\n${mdFiles}\n`);
             const devtoArticles = [];
+            const newlySyncedArticles = [];
             for (const filePath of mdFiles) {
                 const article = yield parseZennArticle(filePath);
                 const devtoBody = article.body
@@ -123,6 +125,7 @@ function run() {
                         core.info(`[${new Date().toISOString()}] article -> create: ${title}`);
                         devtoArticles.push({ title, url });
                         yield fs_1.promises.writeFile(filePath, article.markdown.replace(/^---/g, `---\ndevto_article_id: ${response.data.id}`));
+                        newlySyncedArticles.push(filePath);
                     }
                     catch (err) {
                         core.error(err.message);
@@ -131,8 +134,8 @@ function run() {
                 }
             }
             core.setOutput('articles', JSON.stringify(devtoArticles, undefined, 2));
-            if (mdFiles.length > 0) {
-                core.setOutput('modified', mdFiles.join(' '));
+            if (newlySyncedArticles.length > 0) {
+                core.setOutput('newly-sync-articles', newlySyncedArticles.join(' '));
             }
         }
         catch (error) {
@@ -6938,7 +6941,7 @@ function readAlias(state) {
 
   alias = state.input.slice(_position, state.position);
 
-  if (!state.anchorMap.hasOwnProperty(alias)) {
+  if (!_hasOwnProperty.call(state.anchorMap, alias)) {
     throwError(state, 'unidentified alias "' + alias + '"');
   }
 
