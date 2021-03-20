@@ -94,7 +94,7 @@ function run() {
                     article: {
                         title: `[${header.type.toUpperCase()}] ${header.title} ${header.emoji}`,
                         tags: header.topics.slice(0, 3),
-                        published: false,
+                        published: header.published,
                         body_markdown: devtoBody
                     }
                 };

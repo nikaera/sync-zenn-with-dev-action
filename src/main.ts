@@ -101,7 +101,7 @@ async function run(): Promise<void> {
             header.emoji
           }`,
           tags: header.topics.slice(0, 3),
-          published: false, // header.published,
+          published: header.published,
           body_markdown: devtoBody
         }
       }
