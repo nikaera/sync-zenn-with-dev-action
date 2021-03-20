@@ -26,7 +26,7 @@ jobs:
           npm install
           npm run all
       - name: dev.to action step
-        uses: nikaera/sync-zenn-with-dev-action
+        uses: nikaera/sync-zenn-with-dev-action@v1
         id: dev-to
         with:
           # DEV API key will be required.
