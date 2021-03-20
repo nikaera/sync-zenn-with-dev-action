@@ -1,105 +1,70 @@
-<p align="center">
-  <a href="https://github.com/actions/typescript-action/actions"><img alt="typescript-action status" src="https://github.com/actions/typescript-action/workflows/build-test/badge.svg"></a>
-</p>
+# Just sync Zenn articles to DEV
 
-# Create a JavaScript Action using TypeScript
+It can be used to sync articles written in [Zenn](https://zenn.dev/) to [DEV](http://dev.to/).
 
-Use this template to bootstrap the creation of a TypeScript action.:rocket:
+## Usage
 
-This template includes compilation support, tests, a validation workflow, publishing, and versioning guidance.  
+See [action.yml](https://github.com/nikaera/sync-zenn-with-dev-action/blob/main/.github/workflows/test.yml).
 
-If you are new, there's also a simpler introduction.  See the [Hello World JavaScript Action](https://github.com/actions/hello-world-javascript-action)
+The minimum usage is as follows.
 
-## Create an action from this template
+```yml
+name: 'build-test'
+on:
+  push:
+    branches:
+      - main
 
-Click the `Use this Template` and provide the new repo details for your action
-
-## Code in Main
-
-> First, you'll need to have a reasonably modern version of `node` handy. This won't work with versions older than 9, for instance.
-
-Install the dependencies  
-```bash
-$ npm install
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.message, '[skip ci]') == false
+    steps:
+      - name: setup node project
+        uses: actions/checkout@v2
+      - run: |
+          npm install
+          npm run all
+      - name: dev.to action step
+        uses: nikaera/sync-zenn-with-dev-action
+        id: dev-to
+        with:
+          # DEV API key will be required.
+          api_key: ${{ secrets.api_key }}
+          # (optional) Your account name in Zenn (Fields to be filled in if canonical url is set.)
+          username: nikaera
+          # (optional) Synchronize only the articles in the file path divided by line breaks.
+          added_modified_filepath: ./added_modified.txt
+        # If there is a new article to be synced to DEV,
+        # the ID of the DEV article will be assigned to the markdown header of the Zenn article.
+        # (This is used to determine whether the article will be newly created or updated next time.)
+      - name: write article id of DEV to articles of Zenn.
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add ${{ steps.dev-to.outputs.newly-sync-articles }}
+          git commit -m "sync: Zenn with DEV [skip ci]"
+          git push
+        if: steps.dev-to.outputs.newly-sync-articles
+        # Output the title and URL of the article synced to DEV.
+      - name: Get the output articles.
+        run: echo "${{ steps.dev-to.outputs.articles }}"
 ```
 
-Build the typescript and package it for distribution
-```bash
-$ npm run build && npm run package
-```
+## Customizing
 
-Run the tests :heavy_check_mark:  
-```bash
-$ npm test
+### inputs
 
- PASS  ./index.test.js
-  ✓ throws invalid number (3ms)
-  ✓ wait 500 ms (504ms)
-  ✓ test runs (95ms)
+| key | description | required |
+|:---|:---|:---:|
+|api_key| The [API Key](https://docs.forem.com/api/#section/Authentication) required to use the DEV API | true |
+|username | **Your account name** in Zenn (Fields to be filled in if canonical url is set.)  | false |
+|added_modified_filepath | Synchronize only the articles in the file path divided by line breaks. You can use [jitterbit/get-changed-files@v1](https://github.com/jitterbit/get-changed-files) to get only the file paths of articles that have changed in the correct format. | false |
 
-...
-```
+### outputs
 
-## Change action.yml
+| key | description |
+|:---|:---|
+| articles | A list of URLs of dev.to articles that have been created or updated |
+| newly-sync-articles | File path list of newly synchronized articles. **Make sure to commit the list of articles set to this value, as they will be updated.** See [action.yml](https://github.com/nikaera/sync-zenn-with-dev-action/blob/main/.github/workflows/test.yml#L31-L38) |
 
-The action.yml contains defines the inputs and output for your action.
-
-Update the action.yml with your name, description, inputs and outputs for your action.
-
-See the [documentation](https://help.github.com/en/articles/metadata-syntax-for-github-actions)
-
-## Change the Code
-
-Most toolkit and CI/CD operations involve async operations so the action is run in an async function.
-
-```javascript
-import * as core from '@actions/core';
-...
-
-async function run() {
-  try { 
-      ...
-  } 
-  catch (error) {
-    core.setFailed(error.message);
-  }
-}
-
-run()
-```
-
-See the [toolkit documentation](https://github.com/actions/toolkit/blob/master/README.md#packages) for the various packages.
-
-## Publish to a distribution branch
-
-Actions are run from GitHub repos so we will checkin the packed dist folder. 
-
-Then run [ncc](https://github.com/zeit/ncc) and push the results:
-```bash
-$ npm run package
-$ git add dist
-$ git commit -a -m "prod dependencies"
-$ git push origin releases/v1
-```
-
-Note: We recommend using the `--license` option for ncc, which will create a license file for all of the production node modules used in your project.
-
-Your action is now published! :rocket: 
-
-See the [versioning documentation](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
-
-## Validate
-
-You can now validate the action by referencing `./` in a workflow in your repo (see [test.yml](.github/workflows/test.yml))
-
-```yaml
-uses: ./
-with:
-  milliseconds: 1000
-```
-
-See the [actions tab](https://github.com/actions/typescript-action/actions) for runs of this action! :rocket:
-
-## Usage:
-
-After testing you can [create a v1 tag](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md) to reference the stable and latest V1 action
