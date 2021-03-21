@@ -68,6 +68,10 @@ jobs:
 | articles | A list of URLs of dev.to articles that have been created or updated |
 | newly-sync-articles | File path list of newly synchronized articles. **Make sure to commit the list of articles set to this value, as they will be updated.** See [action.yml](https://github.com/nikaera/sync-zenn-with-dev-action/blob/main/.github/workflows/test.yml#L31-L38) |
 
+## Notes
+
+- [DEV only allows 4 tags](https://dev.to/p/editor_guide#front-matter), so if an article has more than 4 tags, the first 4 tags will be set in the article.
+
 ## License
 
 [MIT](https://github.com/nikaera/sync-zenn-with-dev-action/blob/main/LICENSE)
