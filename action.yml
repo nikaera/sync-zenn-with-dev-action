@@ -12,6 +12,10 @@ inputs:
     required: false
     description: "The directory where Zenn articles are stored."
     default: articles
+  update_all:
+    require: false
+    description: "Whether to synchronize all articles."
+    default: false
   added_modified_filepath:
     required: false
     description: |

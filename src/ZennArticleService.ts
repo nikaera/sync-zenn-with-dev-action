@@ -5,9 +5,10 @@ import {ArticleRequest, ZennArticle, ZennMarkdownHeader} from './dto'
 export class ZennArticleService {
   async getMarkdownFileList(
     articleDir: string,
-    modifiedFilePath: string
+    modifiedFilePath: string,
+    updateAll: boolean
   ): Promise<string[]> {
-    if (modifiedFilePath) {
+    if (!updateAll && modifiedFilePath) {
       const addedModified = await fs.readFile(modifiedFilePath, 'utf-8')
       return addedModified
         .split('\n')

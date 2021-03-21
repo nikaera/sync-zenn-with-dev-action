@@ -111,9 +111,9 @@ exports.ZennArticleService = void 0;
 const fs_1 = __webpack_require__(5747);
 const gray_matter_1 = __importDefault(__webpack_require__(5382));
 class ZennArticleService {
-    getMarkdownFileList(articleDir, modifiedFilePath) {
+    getMarkdownFileList(articleDir, modifiedFilePath, updateAll) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (modifiedFilePath) {
+            if (!updateAll && modifiedFilePath) {
                 const addedModified = yield fs_1.promises.readFile(modifiedFilePath, 'utf-8');
                 return addedModified
                     .split('\n')
@@ -211,8 +211,11 @@ function run() {
         const modifiedFilePath = core.getInput('added_modified_filepath', {
             required: false
         });
+        const updateAll = core.getInput('update_all', {
+            required: false
+        }).toLowerCase() === "true";
         try {
-            const markdownFilePaths = yield zennArticleService.getMarkdownFileList(articleDir, modifiedFilePath);
+            const markdownFilePaths = yield zennArticleService.getMarkdownFileList(articleDir, modifiedFilePath, updateAll);
             core.info(`[markdown files]\n${markdownFilePaths}\n`);
             const devtoArticles = [];
             const newlySyncedArticles = [];
