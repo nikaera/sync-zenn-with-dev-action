@@ -7,6 +7,25 @@ require('./sourcemap-register.js');module.exports =
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -22,6 +41,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DEVClient = void 0;
 const axios_1 = __importDefault(__webpack_require__(6545));
+const core = __importStar(__webpack_require__(2186));
 class DEVClient {
     constructor(apiKey) {
         this.client = axios_1.default.create({
@@ -33,14 +53,34 @@ class DEVClient {
     }
     createArticle(request) {
         return __awaiter(this, void 0, void 0, function* () {
-            const req = yield this.client.post(`/articles`, request);
-            return req.data;
+            try {
+                core.info(`[${new Date().toISOString()}] article -> created: ${request.article.title}`);
+                const response = yield this.client.post('/articles', request);
+                core.info(`[${new Date().toISOString()}] article -> created ${request.article.title}`);
+                const { id, title, url } = response.data;
+                return { id, title, url };
+            }
+            catch (err) {
+                core.error(err.message);
+                core.error(`[${new Date().toISOString()}] article -> failed created: ${request.article.title}`);
+            }
+            return null;
         });
     }
-    updateArticle(id, request) {
+    updateArticle(articleId, request) {
         return __awaiter(this, void 0, void 0, function* () {
-            const req = yield this.client.put(`/articles/${id}`, request);
-            return req.data;
+            try {
+                core.info(`[${new Date().toISOString()}] article -> update: ${articleId}`);
+                const response = yield this.client.put(`/articles/${articleId}`, request);
+                core.info(`[${new Date().toISOString()}] article -> updated: ${articleId}, ${request.article.title}`);
+                const { id, title, url } = response.data;
+                return { id, title, url };
+            }
+            catch (err) {
+                core.error(err.message);
+                core.error(`[${new Date().toISOString()}] article -> failed updated: ${articleId}. ${request.article.title}`);
+            }
+            return null;
         });
     }
 }
@@ -158,11 +198,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__webpack_require__(2186));
+const wait_1 = __webpack_require__(5817);
 const path_1 = __importDefault(__webpack_require__(5622));
 const DEVClient_1 = __webpack_require__(4375);
 const ZennArticleService_1 = __webpack_require__(6216);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
+        const maxRetryCount = 10;
         const devClient = new DEVClient_1.DEVClient(core.getInput('api_key', { required: true }));
         const zennArticleService = new ZennArticleService_1.ZennArticleService();
         const articleDir = core.getInput('articles', { required: false });
@@ -182,33 +224,44 @@ function run() {
                     const basename = path_1.default.basename(filePath, '.md');
                     request.article.canonical_url = `https://zenn.dev/${username}/articles/${basename}`;
                 }
+                let retryCount = 0;
                 const devArticleId = article.header.dev_article_id;
                 if (devArticleId) {
-                    core.info(`[${new Date().toISOString()}] article -> update: ${devArticleId}`);
-                    try {
-                        const response = yield devClient.updateArticle(devArticleId, request);
-                        const { title, url } = response;
-                        core.info(`[${new Date().toISOString()}] article -> updated: ${devArticleId}, ${article.header.title}`);
-                        devtoArticles.push({ title, url });
-                    }
-                    catch (err) {
-                        core.error(err.message);
-                        core.error(`[${new Date().toISOString()}] article -> failed updated: ${devArticleId}. ${article.header.title}`);
+                    while (retryCount < maxRetryCount) {
+                        try {
+                            const response = yield devClient.updateArticle(devArticleId, request);
+                            devtoArticles.push(response);
+                            break;
+                        }
+                        catch (err) {
+                            core.error(err.message);
+                        }
+                        finally {
+                            // There is a limit of 30 requests per 30 seconds.
+                            // https://docs.forem.com/api/#operation/updateArticle
+                            yield wait_1.wait(1 * 1000);
+                            retryCount++;
+                        }
                     }
                 }
                 else {
-                    core.info(`[${new Date().toISOString()}] article -> create: ${article.header.title}`);
-                    try {
-                        const response = yield devClient.createArticle(request);
-                        const { title, url } = response;
-                        core.info(`[${new Date().toISOString()}] article -> created: ${title}`);
-                        yield zennArticleService.writeDEVArticleIDToFile(filePath, article, response.id);
-                        devtoArticles.push({ title, url });
-                        newlySyncedArticles.push(filePath);
-                    }
-                    catch (err) {
-                        core.error(err.message);
-                        core.error(`[${new Date().toISOString()}] article -> create failed: ${article.header.title}`);
+                    while (retryCount < maxRetryCount) {
+                        try {
+                            const response = yield devClient.createArticle(request);
+                            yield zennArticleService.writeDEVArticleIDToFile(filePath, article, response.id);
+                            devtoArticles.push(response);
+                            newlySyncedArticles.push(filePath);
+                            break;
+                        }
+                        catch (err) {
+                            core.error(err.message);
+                        }
+                        finally {
+                            // There is a limit of 10 requests per 30 seconds.
+                            // https://docs.forem.com/api/#operation/createArticle
+                            yield wait_1.wait(3 * 1000);
+                            retryCount++;
+                        }
                     }
                 }
             }
@@ -224,6 +277,37 @@ function run() {
     });
 }
 run();
+
+
+/***/ }),
+
+/***/ 5817:
+/***/ (function(__unused_webpack_module, exports) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.wait = void 0;
+function wait(milliseconds) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return new Promise(resolve => {
+            if (isNaN(milliseconds)) {
+                throw new Error('milliseconds not a number');
+            }
+            setTimeout(() => resolve('done!'), milliseconds);
+        });
+    });
+}
+exports.wait = wait;
 
 
 /***/ }),

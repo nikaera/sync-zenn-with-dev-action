@@ -1,10 +1,12 @@
 import * as core from '@actions/core'
+import {wait} from './wait'
 import path from 'path'
 import {DEVArticle} from './dto'
 import {DEVClient} from './DEVClient'
 import {ZennArticleService} from './ZennArticleService'
 
 async function run(): Promise<void> {
+  const maxRetryCount = 10
   const devClient = new DEVClient(core.getInput('api_key', {required: true}))
   const zennArticleService = new ZennArticleService()
 
@@ -32,61 +34,48 @@ async function run(): Promise<void> {
         request.article.canonical_url = `https://zenn.dev/${username}/articles/${basename}`
       }
 
+      let retryCount = 0
       const devArticleId = article.header.dev_article_id
       if (devArticleId) {
-        core.info(
-          `[${new Date().toISOString()}] article -> update: ${devArticleId}`
-        )
-
-        try {
-          const response = await devClient.updateArticle(devArticleId, request)
-          const {title, url} = response
-          core.info(
-            `[${new Date().toISOString()}] article -> updated: ${devArticleId}, ${
-              article.header.title
-            }`
-          )
-
-          devtoArticles.push({title, url})
-        } catch (err) {
-          core.error(err.message)
-          core.error(
-            `[${new Date().toISOString()}] article -> failed updated: ${devArticleId}. ${
-              article.header.title
-            }`
-          )
+        while (retryCount < maxRetryCount) {
+          try {
+            const response = await devClient.updateArticle(
+              devArticleId,
+              request
+            )
+            devtoArticles.push(response as DEVArticle)
+            break
+          } catch (err) {
+            core.error(err.message)
+          } finally {
+            // There is a limit of 30 requests per 30 seconds.
+            // https://docs.forem.com/api/#operation/updateArticle
+            await wait(1 * 1000)
+            retryCount++
+          }
         }
       } else {
-        core.info(
-          `[${new Date().toISOString()}] article -> create: ${
-            article.header.title
-          }`
-        )
+        while (retryCount < maxRetryCount) {
+          try {
+            const response = await devClient.createArticle(request)
 
-        try {
-          const response = await devClient.createArticle(request)
+            await zennArticleService.writeDEVArticleIDToFile(
+              filePath,
+              article,
+              response!.id
+            )
 
-          const {title, url} = response
-
-          core.info(
-            `[${new Date().toISOString()}] article -> created: ${title}`
-          )
-
-          await zennArticleService.writeDEVArticleIDToFile(
-            filePath,
-            article,
-            response.id
-          )
-
-          devtoArticles.push({title, url})
-          newlySyncedArticles.push(filePath)
-        } catch (err) {
-          core.error(err.message)
-          core.error(
-            `[${new Date().toISOString()}] article -> create failed: ${
-              article.header.title
-            }`
-          )
+            devtoArticles.push(response as DEVArticle)
+            newlySyncedArticles.push(filePath)
+            break
+          } catch (err) {
+            core.error(err.message)
+          } finally {
+            // There is a limit of 10 requests per 30 seconds.
+            // https://docs.forem.com/api/#operation/createArticle
+            await wait(3 * 1000)
+            retryCount++
+          }
         }
       }
     }

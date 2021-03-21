@@ -13,6 +13,7 @@ export interface ZennArticle {
 }
 
 export interface DEVArticle {
+  id: number
   title: string
   url: string
 }
