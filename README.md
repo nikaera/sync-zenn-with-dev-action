@@ -18,13 +18,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, '[skip ci]') == false
     steps:
-      - name: setup node project
+      - name: checkout my project
         uses: actions/checkout@v2
-      - run: |
-          npm install
-          npm run all
       - name: dev.to action step
         uses: nikaera/sync-zenn-with-dev-action@v1
         id: dev-to
@@ -32,11 +28,11 @@ jobs:
           # DEV API key will be required.
           api_key: ${{ secrets.api_key }}
           # (optional) Your account name in Zenn (Fields to be filled in if canonical url is set.)
-          username: nikaera
+          # username: nikaera
           # (optional) Synchronize only the articles in the file path divided by line breaks.
-          added_modified_filepath: ./added_modified.txt
+          # added_modified_filepath: ./added_modified.txt
           # (optional) Whether to sync all articles. `update_all` takes precedence over `added_modified_filepath`.
-          update_all: true
+          # update_all: false
         # If there is a new article to be synced to DEV,
         # the ID of the DEV article will be assigned to the markdown header of the Zenn article.
         # (This is used to determine whether the article will be newly created or updated next time.)
@@ -53,6 +49,14 @@ jobs:
         run: echo "${{ steps.dev-to.outputs.articles }}"
 ```
 
+## Scenario
+
+Initially, I recommend running the following GitHub Action to sync all your articles to DEV.
+https://github.com/nikaera/zenn.dev/blob/main/.github/workflows/sync-zenn-with-dev-action-all.yml
+
+After that, you can use the following GitHub Action to synchronize the article as soon as there are changes in the article file.
+https://github.com/nikaera/zenn.dev/blob/main/.github/workflows/sync-zenn-with-dev.yml
+
 ## Customizing
 
 ### inputs
@@ -62,7 +66,7 @@ jobs:
 |api_key| The [API Key](https://docs.forem.com/api/#section/Authentication) required to use the DEV API | true |
 |username | **Your account name** in Zenn (Fields to be filled in if canonical url is set.)  | false |
 |added_modified_filepath | Synchronize only the articles in the file path divided by line breaks. You can use [jitterbit/get-changed-files@v1](https://github.com/jitterbit/get-changed-files) to get only the file paths of articles that have changed in the correct format. | false |
-|update_all| Whether to sync all articles. **`update_all` takes precedence over `added_modified_filepath`**. | false |
+|update_all| Whether to sync all articles. **`update_all` takes precedence over `added_modified_filepath`**. | true |
 
 ### outputs
 

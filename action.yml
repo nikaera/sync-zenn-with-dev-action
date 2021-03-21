@@ -15,7 +15,7 @@ inputs:
   update_all:
     require: false
     description: "Whether to synchronize all articles."
-    default: false
+    default: true
   added_modified_filepath:
     required: false
     description: |
