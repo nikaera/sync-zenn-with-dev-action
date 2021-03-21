@@ -14,18 +14,18 @@ async function run(): Promise<void> {
   const modifiedFilePath = core.getInput('added_modified_filepath', {
     required: false
   })
-  const updateAll =
-    core
-      .getInput('update_all', {
-        required: false
-      })
-      .toLowerCase() === 'true'
+  const updateAll = core
+    .getInput('update_all', {
+      required: false
+    })
+  const isUpdateAll = updateAll.toLowerCase() === 'true'
+  core.info(`update_all: ${updateAll}`)
 
   try {
     const markdownFilePaths: string[] = await zennArticleService.getMarkdownFileList(
       articleDir,
       modifiedFilePath,
-      updateAll
+      isUpdateAll
     )
     core.info(`[markdown files]\n${markdownFilePaths}\n`)
 
