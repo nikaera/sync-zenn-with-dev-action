@@ -28,6 +28,7 @@ jobs:
         with:
           api_key: ${{ secrets.api_key }}
           added_modified_filepath: ./added_modified.txt
+          update_all: false
       - name: write article id of DEV to articles of Zenn.
         run: |
           git config user.name github-actions
