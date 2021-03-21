@@ -2,6 +2,124 @@ require('./sourcemap-register.js');module.exports =
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 4375:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.DEVClient = void 0;
+const axios_1 = __importDefault(__webpack_require__(6545));
+class DEVClient {
+    constructor(apiKey) {
+        this.client = axios_1.default.create({
+            baseURL: 'https://dev.to/api',
+            headers: {
+                'api-key': apiKey
+            }
+        });
+    }
+    createArticle(request) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const req = yield this.client.post(`/articles`, request);
+            return req.data;
+        });
+    }
+    updateArticle(id, request) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const req = yield this.client.put(`/articles/${id}`, request);
+            return req.data;
+        });
+    }
+}
+exports.DEVClient = DEVClient;
+
+
+/***/ }),
+
+/***/ 6216:
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.ZennArticleService = void 0;
+const fs_1 = __webpack_require__(5747);
+const gray_matter_1 = __importDefault(__webpack_require__(5382));
+class ZennArticleService {
+    getMarkdownFileList(articleDir, modifiedFilePath) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (modifiedFilePath) {
+                const addedModified = yield fs_1.promises.readFile(modifiedFilePath, 'utf-8');
+                return addedModified
+                    .split('\n')
+                    .filter(f => f.startsWith(articleDir) && f.endsWith('.md'));
+            }
+            const files = yield fs_1.promises.readdir(articleDir);
+            return files.filter(f => f.endsWith('.md')).map(f => `${articleDir}/${f}`);
+        });
+    }
+    parse(filePath) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const markdown = yield fs_1.promises.readFile(filePath, 'utf-8');
+            const article = gray_matter_1.default(markdown);
+            const header = article.data;
+            return { header, markdown, body: article.content };
+        });
+    }
+    createArticleRequest(article) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const devtoBody = article.body
+                .replace(/```.+(:.+)?/g, function (match) {
+                return match.split(':')[0];
+            })
+                .replace(/:::.*/g, '');
+            const { header } = article;
+            return {
+                article: {
+                    title: `[${header.type.toUpperCase()}] ${header.title} ${header.emoji}`,
+                    tags: header.topics.slice(0, 3),
+                    published: header.published,
+                    body_markdown: devtoBody
+                }
+            };
+        });
+    }
+    writeDEVArticleIDToFile(filePath, article, devArticleId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield fs_1.promises.writeFile(filePath, article.markdown.replace(/^---/g, `---\ndev_article_id: ${devArticleId}`));
+        });
+    }
+}
+exports.ZennArticleService = ZennArticleService;
+
+
+/***/ }),
+
 /***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
@@ -40,64 +158,25 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__webpack_require__(2186));
-const axios_1 = __importDefault(__webpack_require__(6545));
-const fs_1 = __webpack_require__(5747);
 const path_1 = __importDefault(__webpack_require__(5622));
-const gray_matter_1 = __importDefault(__webpack_require__(5382));
-function parseZennArticle(filePath) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const markdown = yield fs_1.promises.readFile(filePath, 'utf-8');
-        const article = gray_matter_1.default(markdown);
-        const header = article.data;
-        return { header, markdown, body: article.content };
-    });
-}
+const DEVClient_1 = __webpack_require__(4375);
+const ZennArticleService_1 = __webpack_require__(6216);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        const devtoClient = axios_1.default.create({
-            baseURL: 'https://dev.to/api',
-            headers: {
-                'api-key': core.getInput('api_key', { required: true })
-            }
+        const devClient = new DEVClient_1.DEVClient(core.getInput('api_key', { required: true }));
+        const zennArticleService = new ZennArticleService_1.ZennArticleService();
+        const articleDir = core.getInput('articles', { required: false });
+        const modifiedFilePath = core.getInput('added_modified_filepath', {
+            required: false
         });
         try {
-            const articleDir = core.getInput('articles', { required: false });
-            const files = yield fs_1.promises.readdir(articleDir);
-            let mdFiles;
-            const modifiedFilePath = core.getInput('added_modified_filepath', {
-                required: false
-            });
-            if (modifiedFilePath) {
-                const addedModified = yield fs_1.promises.readFile(modifiedFilePath, 'utf-8');
-                core.info(`[${modifiedFilePath}]\n${addedModified}`);
-                mdFiles = addedModified
-                    .split('\n')
-                    .filter(f => f.startsWith(articleDir) && f.endsWith('.md'));
-            }
-            else {
-                mdFiles = files
-                    .filter(f => f.endsWith('.md'))
-                    .map(f => `${articleDir}/${f}`);
-            }
-            core.info(`[markdown files]\n${mdFiles}\n`);
+            const markdownFilePaths = yield zennArticleService.getMarkdownFileList(articleDir, modifiedFilePath);
+            core.info(`[markdown files]\n${markdownFilePaths}\n`);
             const devtoArticles = [];
             const newlySyncedArticles = [];
-            for (const filePath of mdFiles) {
-                const article = yield parseZennArticle(filePath);
-                const devtoBody = article.body
-                    .replace(/```.+(:.+)?/g, function (match) {
-                    return match.split(':')[0];
-                })
-                    .replace(/:::.*/g, '');
-                const { header } = article;
-                const request = {
-                    article: {
-                        title: `[${header.type.toUpperCase()}] ${header.title} ${header.emoji}`,
-                        tags: header.topics.slice(0, 3),
-                        published: header.published,
-                        body_markdown: devtoBody
-                    }
-                };
+            for (const filePath of markdownFilePaths) {
+                const article = yield zennArticleService.parse(filePath);
+                const request = yield zennArticleService.createArticleRequest(article);
                 const username = core.getInput('username', { required: false });
                 if (username) {
                     const basename = path_1.default.basename(filePath, '.md');
@@ -105,31 +184,31 @@ function run() {
                 }
                 if (article.header.devto_article_id) {
                     const id = article.header.devto_article_id;
-                    core.info(`[${new Date().toISOString()}] article -> update: ${id}, ${header.title}`);
+                    core.info(`[${new Date().toISOString()}] article -> update: ${id}`);
                     try {
-                        const response = yield devtoClient.put(`/articles/${id}`, request);
-                        const { title, url } = response.data;
-                        core.info(`[${new Date().toISOString()}] article -> updated: ${id}, ${header.title}`);
+                        const response = yield devClient.updateArticle(id, request);
+                        const { title, url } = response;
+                        core.info(`[${new Date().toISOString()}] article -> updated: ${id}, ${article.header.title}`);
                         devtoArticles.push({ title, url });
                     }
                     catch (err) {
                         core.error(err.message);
-                        core.error(`[${new Date().toISOString()}] article -> failed updated: ${id}, ${header.title}`);
+                        core.error(`[${new Date().toISOString()}] article -> failed updated: ${id}. ${article.header.title}`);
                     }
                 }
                 else {
-                    core.info(`[${new Date().toISOString()}] article -> create: ${header.title}`);
+                    core.info(`[${new Date().toISOString()}] article -> create: ${article.header.title}`);
                     try {
-                        const response = yield devtoClient.post('/articles', request);
-                        const { title, url } = response.data;
-                        core.info(`[${new Date().toISOString()}] article -> create: ${title}`);
+                        const response = yield devClient.createArticle(request);
+                        const { title, url } = response;
+                        core.info(`[${new Date().toISOString()}] article -> created: ${title}`);
+                        yield zennArticleService.writeDEVArticleIDToFile(filePath, article, response.id);
                         devtoArticles.push({ title, url });
-                        yield fs_1.promises.writeFile(filePath, article.markdown.replace(/^---/g, `---\ndevto_article_id: ${response.data.id}`));
                         newlySyncedArticles.push(filePath);
                     }
                     catch (err) {
                         core.error(err.message);
-                        core.error(`[${new Date().toISOString()}] article -> create failed: ${header.title}`);
+                        core.error(`[${new Date().toISOString()}] article -> create failed: ${article.header.title}`);
                     }
                 }
             }
