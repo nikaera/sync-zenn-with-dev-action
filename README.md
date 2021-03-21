@@ -4,12 +4,10 @@ It can be used to sync articles written in [Zenn](https://zenn.dev/) to [DEV](ht
 
 ## Usage
 
-See [action.yml](https://github.com/nikaera/sync-zenn-with-dev-action/blob/main/.github/workflows/test.yml).
-
 The minimum usage is as follows.
 
 ```yml
-name: 'build-test'
+name: 'Sync all Zenn articles to DEV'
 on:
   push:
     branches:
