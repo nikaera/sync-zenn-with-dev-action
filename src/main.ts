@@ -32,16 +32,17 @@ async function run(): Promise<void> {
         request.article.canonical_url = `https://zenn.dev/${username}/articles/${basename}`
       }
 
-      if (article.header.devto_article_id) {
-        const id = article.header.devto_article_id
-
-        core.info(`[${new Date().toISOString()}] article -> update: ${id}`)
+      const devArticleId = article.header.dev_article_id
+      if (devArticleId) {
+        core.info(
+          `[${new Date().toISOString()}] article -> update: ${devArticleId}`
+        )
 
         try {
-          const response = await devClient.updateArticle(id, request)
+          const response = await devClient.updateArticle(devArticleId, request)
           const {title, url} = response
           core.info(
-            `[${new Date().toISOString()}] article -> updated: ${id}, ${
+            `[${new Date().toISOString()}] article -> updated: ${devArticleId}, ${
               article.header.title
             }`
           )
@@ -50,7 +51,7 @@ async function run(): Promise<void> {
         } catch (err) {
           core.error(err.message)
           core.error(
-            `[${new Date().toISOString()}] article -> failed updated: ${id}. ${
+            `[${new Date().toISOString()}] article -> failed updated: ${devArticleId}. ${
               article.header.title
             }`
           )

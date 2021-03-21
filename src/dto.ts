@@ -4,7 +4,7 @@ export interface ZennMarkdownHeader {
   emoji: string
   topics: string[]
   published: boolean
-  devto_article_id?: number
+  dev_article_id?: number
 }
 export interface ZennArticle {
   header: ZennMarkdownHeader

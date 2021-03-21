@@ -182,18 +182,18 @@ function run() {
                     const basename = path_1.default.basename(filePath, '.md');
                     request.article.canonical_url = `https://zenn.dev/${username}/articles/${basename}`;
                 }
-                if (article.header.devto_article_id) {
-                    const id = article.header.devto_article_id;
-                    core.info(`[${new Date().toISOString()}] article -> update: ${id}`);
+                const devArticleId = article.header.dev_article_id;
+                if (devArticleId) {
+                    core.info(`[${new Date().toISOString()}] article -> update: ${devArticleId}`);
                     try {
-                        const response = yield devClient.updateArticle(id, request);
+                        const response = yield devClient.updateArticle(devArticleId, request);
                         const { title, url } = response;
-                        core.info(`[${new Date().toISOString()}] article -> updated: ${id}, ${article.header.title}`);
+                        core.info(`[${new Date().toISOString()}] article -> updated: ${devArticleId}, ${article.header.title}`);
                         devtoArticles.push({ title, url });
                     }
                     catch (err) {
                         core.error(err.message);
-                        core.error(`[${new Date().toISOString()}] article -> failed updated: ${id}. ${article.header.title}`);
+                        core.error(`[${new Date().toISOString()}] article -> failed updated: ${devArticleId}. ${article.header.title}`);
                     }
                 }
                 else {
