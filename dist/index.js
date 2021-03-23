@@ -142,7 +142,7 @@ class ZennArticleService {
             return {
                 article: {
                     title: `[${header.type.toUpperCase()}] ${header.title} ${header.emoji}`,
-                    tags: header.topics.slice(0, 3),
+                    tags: header.topics.slice(0, 4),
                     published: header.published,
                     body_markdown: devtoBody
                 }
@@ -211,11 +211,14 @@ function run() {
         const modifiedFilePath = core.getInput('added_modified_filepath', {
             required: false
         });
-        const updateAll = core.getInput('update_all', {
+        const updateAll = core
+            .getInput('update_all', {
             required: false
-        }).toLowerCase() === "true";
+        });
+        const isUpdateAll = updateAll.toLowerCase() === 'true';
+        core.info(`update_all: ${updateAll}`);
         try {
-            const markdownFilePaths = yield zennArticleService.getMarkdownFileList(articleDir, modifiedFilePath, updateAll);
+            const markdownFilePaths = yield zennArticleService.getMarkdownFileList(articleDir, modifiedFilePath, isUpdateAll);
             core.info(`[markdown files]\n${markdownFilePaths}\n`);
             const devtoArticles = [];
             const newlySyncedArticles = [];
