@@ -38,7 +38,7 @@ export class ZennArticleService {
     return {
       article: {
         title: `[${header.type.toUpperCase()}] ${header.title} ${header.emoji}`,
-        tags: header.topics.slice(0, 3),
+        tags: header.topics.slice(0, 4),
         published: header.published,
         body_markdown: devtoBody
       }
