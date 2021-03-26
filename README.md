@@ -1,8 +1,8 @@
-# Just sync Zenn articles to DEV
+# Just sync Zenn articles to DEV 🧘
 
 It can be used to sync articles written in [Zenn](https://zenn.dev/) to [DEV](http://dev.to/).
 
-## Usage
+## ▶️ Usage
 
 The minimum usage is as follows.
 
@@ -47,7 +47,7 @@ jobs:
         run: echo "${{ steps.dev-to.outputs.articles }}"
 ```
 
-## Scenario
+## 🎬 Scenario
 
 Initially, I recommend running the following GitHub Action to sync all your articles to DEV.
 https://github.com/nikaera/zenn.dev/blob/main/.github/workflows/sync-zenn-with-dev-action-all.yml
@@ -55,9 +55,9 @@ https://github.com/nikaera/zenn.dev/blob/main/.github/workflows/sync-zenn-with-d
 After that, you can use the following GitHub Action to synchronize the article as soon as there are changes in the article file.
 https://github.com/nikaera/zenn.dev/blob/main/.github/workflows/sync-zenn-with-dev.yml
 
-## Customizing
+## 🛠️ Customizing
 
-### inputs
+### Inputs
 
 | key | description | required |
 |:---|:---|:---:|
@@ -66,14 +66,14 @@ https://github.com/nikaera/zenn.dev/blob/main/.github/workflows/sync-zenn-with-d
 |added_modified_filepath | Synchronize only the articles in the file path divided by line breaks. You can use [jitterbit/get-changed-files@v1](https://github.com/jitterbit/get-changed-files) to get only the file paths of articles that have changed in the correct format. | false |
 |update_all| Whether to sync all articles. **`update_all` takes precedence over `added_modified_filepath`**. | true |
 
-### outputs
+### Outputs
 
 | key | description |
 |:---|:---|
 | articles | A list of URLs of dev.to articles that have been created or updated |
 | newly-sync-articles | File path list of newly synchronized articles. **Make sure to commit the list of articles set to this value, as they will be updated.** See [action.yml](https://github.com/nikaera/sync-zenn-with-dev-action/blob/main/.github/workflows/test.yml#L31-L38) |
 
-## Notes
+## 📝 Notes
 
 - [DEV only allows 4 tags](https://dev.to/p/editor_guide#front-matter), so if an article has more than 4 tags, the first 4 tags will be set in the article.
 
