@@ -67,7 +67,7 @@ https://github.com/nikaera/zenn.dev/blob/main/.github/workflows/sync-zenn-with-d
 |username | **Your account name** in Zenn (Fields to be filled in if canonical url is set.)  | false |
 |added_modified_filepath | Synchronize only the articles in the file path divided by line breaks. You can use [jitterbit/get-changed-files@v1](https://github.com/jitterbit/get-changed-files) to get only the file paths of articles that have changed in the correct format. | false |
 |update_all| Whether to sync all articles. **`update_all` takes precedence over `added_modified_filepath`**. | true |
-|title_format| Specify the DEV article title format. **`{title}` is required. `{type}` and `{emoji}` are not required.** (ex. `[{type}] {title} {emoji}`) | false |
+|title_format| Specify the DEV article title format. **`{title}` is required. `{type}` and `{emoji}` are not required.** (ex. `"[{type}] {title} {emoji}"`) | false |
 
 ### Outputs
 
