@@ -37,3 +37,7 @@ export interface ArticleRequest {
     organization_id?: number
   }
 }
+
+export interface ArticleRequestOption {
+  titleFormat: string
+}

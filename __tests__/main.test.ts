@@ -1,28 +1,31 @@
-import {wait} from '../src/wait'
-import * as process from 'process'
-import * as cp from 'child_process'
-import * as path from 'path'
+import {ZennArticleService} from '../src/ZennArticleService'
 
-test('throws invalid number', async () => {
-  const input = parseInt('foo', 10)
-  await expect(wait(input)).rejects.toThrow('milliseconds not a number')
+describe('ZennArticleService', () => {
+  it('Use titleFormat to specify the correct format.', async () => {
+    const zennArticleService = new ZennArticleService()
+    const article = await zennArticleService.parse('./__tests__/articles/test.md');
+
+    const title1 = zennArticleService.formattedTitle(article.header, "[{type}] {title} {emoji}");
+    expect(title1).toBe('[TECH] Test ⛵');
+
+    const title2 = zennArticleService.formattedTitle(article.header, "{title}");
+    expect(title2).toBe('Test');
+
+    const title3 = zennArticleService.formattedTitle(article.header, "{emoji}{title}{emoji}");
+    expect(title3).toBe('⛵Test⛵');
+  })
+
+  it('Use titleFormat to specify the incorrect format.', async () => {
+    const zennArticleService = new ZennArticleService()
+    const article = await zennArticleService.parse('./__tests__/articles/test.md');
+
+    const wrongFormattedTitle = (titleFormat: string) => {
+      const test = () => zennArticleService.formattedTitle(article.header, titleFormat);
+      expect(test).toThrowError(new Error('{title} is the description needed to specify the title'));
+    }
+
+    wrongFormattedTitle("[{type}] {emoji}")
+    wrongFormattedTitle("{Title}")
+  })
 })
 
-test('wait 500 ms', async () => {
-  const start = new Date()
-  await wait(500)
-  const end = new Date()
-  var delta = Math.abs(end.getTime() - start.getTime())
-  expect(delta).toBeGreaterThan(450)
-})
-
-// shows how the runner will run a javascript action with env / stdout protocol
-test('test runs', () => {
-  process.env['INPUT_MILLISECONDS'] = '500'
-  const np = process.execPath
-  const ip = path.join(__dirname, '..', 'lib', 'main.js')
-  const options: cp.ExecFileSyncOptions = {
-    env: process.env
-  }
-  console.log(cp.execFileSync(np, [ip], options).toString())
-})
