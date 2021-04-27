@@ -11,6 +11,7 @@ async function run(): Promise<void> {
   const zennArticleService = new ZennArticleService()
 
   const articleDir = core.getInput('articles', {required: false})
+  const titleFormat = core.getInput('title_format', {required: false})
   const modifiedFilePath = core.getInput('added_modified_filepath', {
     required: false
   })
@@ -33,7 +34,7 @@ async function run(): Promise<void> {
 
     for (const filePath of markdownFilePaths) {
       const article = await zennArticleService.parse(filePath)
-      const request = await zennArticleService.createArticleRequest(article)
+      const request = await zennArticleService.createArticleRequest(article, {titleFormat})
       const username = core.getInput('username', {required: false})
       if (username) {
         const basename = path.basename(filePath, '.md')
