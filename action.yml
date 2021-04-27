@@ -8,6 +8,12 @@ inputs:
   username:
     required: false
     description: "Zenn user's account name. (Fields to be filled in if canonical url is set.)"
+  title_format:
+    required: false
+    description: |
+      Specify the DEV article title format. (ex. [{type}] {title} {emoji})
+      {title} is required. {type} and {emoji} are not required.
+    default: "[{type}] {title} {emoji}"
   articles:
     required: false
     description: "The directory where Zenn articles are stored."
