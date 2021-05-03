@@ -1,6 +1,9 @@
 name: 'Sync Zenn articles to DEV'
 description: 'Just sync Zenn articles to DEV.'
 author: 'nikaera'
+branding:
+  icon: 'printer'  
+  color: 'blue'
 inputs:
   api_key:
     required: true
