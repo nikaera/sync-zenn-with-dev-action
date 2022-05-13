@@ -26,7 +26,7 @@
   "license": "MIT",
   "dependencies": {
     "@actions/core": "^1.2.7",
-    "@actions/github": "^4.0.0",
+    "@actions/github": "^5.0.2",
     "axios": "^0.21.1",
     "gray-matter": "^4.0.3",
     "npm": "^7.15.0"
