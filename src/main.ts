@@ -1,17 +1,17 @@
 import * as core from '@actions/core'
-import {wait} from './wait'
+import { wait } from './wait'
 import path from 'path'
-import {DEVArticle} from './dto'
-import {DEVClient} from './DEVClient'
-import {ZennArticleService} from './ZennArticleService'
+import { DEVArticle } from './dto'
+import { DEVClient } from './dev_client'
+import { ZennArticleService } from './zenn_article_service'
 
 async function run(): Promise<void> {
   const maxRetryCount = 10
-  const devClient = new DEVClient(core.getInput('api_key', {required: true}))
+  const devClient = new DEVClient(core.getInput('api_key', { required: true }))
   const zennArticleService = new ZennArticleService()
 
-  const articleDir = core.getInput('articles', {required: false})
-  const titleFormat = core.getInput('title_format', {required: false})
+  const articleDir = core.getInput('articles', { required: false })
+  const titleFormat = core.getInput('title_format', { required: false })
   const modifiedFilePath = core.getInput('added_modified_filepath', {
     required: false
   })
@@ -34,8 +34,8 @@ async function run(): Promise<void> {
 
     for (const filePath of markdownFilePaths) {
       const article = await zennArticleService.parse(filePath)
-      const request = await zennArticleService.createArticleRequest(article, {titleFormat})
-      const username = core.getInput('username', {required: false})
+      const request = await zennArticleService.createArticleRequest(article, { titleFormat })
+      const username = core.getInput('username', { required: false })
       if (username) {
         const basename = path.basename(filePath, '.md')
         request.article.canonical_url = `https://zenn.dev/${username}/articles/${basename}`
@@ -53,7 +53,9 @@ async function run(): Promise<void> {
             devtoArticles.push(response as DEVArticle)
             break
           } catch (err) {
-            core.error(err.message)
+            if (err instanceof Error) {
+              core.error(err.message)
+            }
           } finally {
             // There is a limit of 30 requests per 30 seconds.
             // https://docs.forem.com/api/#operation/updateArticle
@@ -76,7 +78,9 @@ async function run(): Promise<void> {
             newlySyncedArticles.push(filePath)
             break
           } catch (err) {
-            core.error(err.message)
+            if (err instanceof Error) {
+              core.error(err.message)
+            }
           } finally {
             // There is a limit of 10 requests per 30 seconds.
             // https://docs.forem.com/api/#operation/createArticle
@@ -91,9 +95,11 @@ async function run(): Promise<void> {
     if (newlySyncedArticles.length > 0) {
       core.setOutput('newly-sync-articles', newlySyncedArticles.join(' '))
     }
-  } catch (error) {
-    core.error(JSON.stringify(error))
-    core.setFailed(error.message)
+  } catch (err) {
+    core.error(JSON.stringify(err))
+    if (err instanceof Error) {
+      core.setFailed(err.message)
+    }
   }
 }
 
