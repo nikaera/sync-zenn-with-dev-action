@@ -1,36 +1,32 @@
-import eslintJs from '@eslint/js'
-import tseslint from 'typescript-eslint'
+const eslintJs = require('@eslint/js')
+const tseslint = require('typescript-eslint')
 
-export default tseslint.config(
+module.exports = tseslint.config(
   eslintJs.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
-  
   {
     files: ['**/*.{js,mjs,cjs,ts}'],
     ignores: ['dist/**', 'lib/**', 'node_modules/**', '*.config.js'],
-    
     languageOptions: {
       parserOptions: {
         ecmaVersion: 'latest',
         sourceType: 'module',
         projectService: true,
-        tsconfigRootDir: import.meta.dirname
+        tsconfigRootDir: __dirname
       },
       globals: {
         node: true,
         es2024: true
       }
     },
-    
     rules: {
       // ESLint core rules
       'no-unused-vars': 'off',
       'no-console': 'warn',
       'prefer-const': 'error',
       'no-var': 'error',
-      
       // TypeScript specific rules
       '@typescript-eslint/no-unused-vars': ['error', { 
         argsIgnorePattern: '^_',
