@@ -37,5 +37,5 @@ outputs:
   newly-sync-articles:
     description: 'File path list of newly synchronized articles.'
 runs:
-  using: 'node12'
+  using: 'node20'
   main: 'dist/index.js'
