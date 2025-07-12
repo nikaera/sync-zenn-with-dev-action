@@ -20,7 +20,7 @@ jobs:
       - name: checkout my project
         uses: actions/checkout@v4
       - name: dev.to action step
-        uses: nikaera/sync-zenn-with-dev-action@v1.2.0
+        uses: nikaera/sync-zenn-with-dev-action@v2.0.0
         id: dev-to
         with:
           # DEV API key will be required.
