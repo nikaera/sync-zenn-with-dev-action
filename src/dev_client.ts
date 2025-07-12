@@ -1,6 +1,7 @@
-import axios, { AxiosInstance } from 'axios'
+import axios from 'axios'
+import type {AxiosInstance} from 'axios'
 import * as core from '@actions/core'
-import { ArticleRequest, ArticleResponse, DEVArticle } from './dto'
+import type {ArticleRequest, ArticleResponse, DEVArticle} from './dto'
 
 export class DEVClient {
   private readonly client: AxiosInstance
@@ -17,7 +18,8 @@ export class DEVClient {
   async createArticle(request: ArticleRequest): Promise<DEVArticle | null> {
     try {
       core.info(
-        `[${new Date().toISOString()}] article -> created: ${request.article.title
+        `[${new Date().toISOString()}] article -> created: ${
+          request.article.title
         }`
       )
 
@@ -26,17 +28,19 @@ export class DEVClient {
         request
       )
       core.info(
-        `[${new Date().toISOString()}] article -> created ${request.article.title
+        `[${new Date().toISOString()}] article -> created ${
+          request.article.title
         }`
       )
 
-      const { id, title, url } = response.data
-      return { id, title, url }
+      const {id, title, url} = response.data
+      return {id, title, url}
     } catch (err) {
       if (err instanceof Error) {
         core.error(err.message)
         core.error(
-          `[${new Date().toISOString()}] article -> failed created: ${request.article.title
+          `[${new Date().toISOString()}] article -> failed created: ${
+            request.article.title
           }`
         )
       }
@@ -50,24 +54,28 @@ export class DEVClient {
     request: ArticleRequest
   ): Promise<DEVArticle | null> {
     try {
-      core.info(`[${new Date().toISOString()}] article -> update: ${articleId}`)
+      core.info(
+        `[${new Date().toISOString()}] article -> update: ${String(articleId)}`
+      )
 
       const response = await this.client.put<ArticleResponse>(
-        `/articles/${articleId}`,
+        `/articles/${String(articleId)}`,
         request
       )
       core.info(
-        `[${new Date().toISOString()}] article -> updated: ${articleId}, ${request.article.title
+        `[${new Date().toISOString()}] article -> updated: ${String(articleId)}, ${
+          request.article.title
         }`
       )
 
-      const { id, title, url } = response.data
-      return { id, title, url }
+      const {id, title, url} = response.data
+      return {id, title, url}
     } catch (err) {
       if (err instanceof Error) {
         core.error(err.message)
         core.error(
-          `[${new Date().toISOString()}] article -> failed updated: ${articleId}. ${request.article.title
+          `[${new Date().toISOString()}] article -> failed updated: ${String(articleId)}. ${
+            request.article.title
           }`
         )
       }

@@ -1,6 +1,11 @@
 import {promises as fs} from 'fs'
 import matter from 'gray-matter'
-import {ArticleRequest, ArticleRequestOption, ZennArticle, ZennMarkdownHeader} from './dto'
+import type {
+  ArticleRequest,
+  ArticleRequestOption,
+  ZennArticle,
+  ZennMarkdownHeader
+} from './dto'
 
 export class ZennArticleService {
   async getMarkdownFileList(
@@ -27,7 +32,10 @@ export class ZennArticleService {
     return {header, markdown, body: article.content}
   }
 
-  async createArticleRequest(article: ZennArticle, option: ArticleRequestOption): Promise<ArticleRequest> {
+  createArticleRequest(
+    article: ZennArticle,
+    option: ArticleRequestOption
+  ): ArticleRequest {
     const devtoBody = article.body
       .replace(/```.+(:.+)?/g, function (match) {
         return match.split(':')[0]
@@ -48,14 +56,14 @@ export class ZennArticleService {
   }
 
   formattedTitle(header: ZennMarkdownHeader, titleFormat: string): string {
-    if(titleFormat.indexOf('{title}') === -1)
-      throw new Error('{title} is the description needed to specify the title');
+    if (!titleFormat.includes('{title}'))
+      throw new Error('{title} is the description needed to specify the title')
 
-    let formatted = titleFormat.replace(/{type}/g, header.type.toUpperCase());
-    formatted = formatted.replace(/{title}/g, header.title);
-    formatted = formatted.replace(/{emoji}/g, header.emoji);
+    let formatted = titleFormat.replace(/{type}/g, header.type.toUpperCase())
+    formatted = formatted.replace(/{title}/g, header.title)
+    formatted = formatted.replace(/{emoji}/g, header.emoji)
 
-    return formatted;
+    return formatted
   }
 
   async writeDEVArticleIDToFile(
@@ -65,7 +73,10 @@ export class ZennArticleService {
   ): Promise<void> {
     await fs.writeFile(
       filePath,
-      article.markdown.replace(/^---/g, `---\ndev_article_id: ${devArticleId}`)
+      article.markdown.replace(
+        /^---/g,
+        `---\ndev_article_id: ${String(devArticleId)}`
+      )
     )
   }
 }

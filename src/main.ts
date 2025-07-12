@@ -1,17 +1,17 @@
 import * as core from '@actions/core'
-import { wait } from './wait'
+import {wait} from './wait'
 import path from 'path'
-import { DEVArticle } from './dto'
-import { DEVClient } from './dev_client'
-import { ZennArticleService } from './zenn_article_service'
+import type {DEVArticle} from './dto'
+import {DEVClient} from './dev_client'
+import {ZennArticleService} from './zenn_article_service'
 
 async function run(): Promise<void> {
   const maxRetryCount = 10
-  const devClient = new DEVClient(core.getInput('api_key', { required: true }))
+  const devClient = new DEVClient(core.getInput('api_key', {required: true}))
   const zennArticleService = new ZennArticleService()
 
-  const articleDir = core.getInput('articles', { required: false })
-  const titleFormat = core.getInput('title_format', { required: false })
+  const articleDir = core.getInput('articles', {required: false})
+  const titleFormat = core.getInput('title_format', {required: false})
   const modifiedFilePath = core.getInput('added_modified_filepath', {
     required: false
   })
@@ -22,20 +22,23 @@ async function run(): Promise<void> {
   core.info(`update_all: ${updateAll}`)
 
   try {
-    const markdownFilePaths: string[] = await zennArticleService.getMarkdownFileList(
-      articleDir,
-      modifiedFilePath,
-      isUpdateAll
-    )
-    core.info(`[markdown files]\n${markdownFilePaths}\n`)
+    const markdownFilePaths: string[] =
+      await zennArticleService.getMarkdownFileList(
+        articleDir,
+        modifiedFilePath,
+        isUpdateAll
+      )
+    core.info(`[markdown files]\n${markdownFilePaths.join('\n')}\n`)
 
     const devtoArticles: DEVArticle[] = []
     const newlySyncedArticles: string[] = []
 
     for (const filePath of markdownFilePaths) {
       const article = await zennArticleService.parse(filePath)
-      const request = await zennArticleService.createArticleRequest(article, { titleFormat })
-      const username = core.getInput('username', { required: false })
+      const request = zennArticleService.createArticleRequest(article, {
+        titleFormat
+      })
+      const username = core.getInput('username', {required: false})
       if (username) {
         const basename = path.basename(filePath, '.md')
         request.article.canonical_url = `https://zenn.dev/${username}/articles/${basename}`
@@ -43,14 +46,16 @@ async function run(): Promise<void> {
 
       let retryCount = 0
       const devArticleId = article.header.dev_article_id
-      if (devArticleId) {
+      if (devArticleId !== undefined) {
         while (retryCount < maxRetryCount) {
           try {
             const response = await devClient.updateArticle(
               devArticleId,
               request
             )
-            devtoArticles.push(response as DEVArticle)
+            if (response !== null) {
+              devtoArticles.push(response)
+            }
             break
           } catch (err) {
             if (err instanceof Error) {
@@ -68,14 +73,18 @@ async function run(): Promise<void> {
           try {
             const response = await devClient.createArticle(request)
 
-            await zennArticleService.writeDEVArticleIDToFile(
-              filePath,
-              article,
-              response!.id
-            )
+            if (response !== null) {
+              await zennArticleService.writeDEVArticleIDToFile(
+                filePath,
+                article,
+                response.id
+              )
+            }
 
-            devtoArticles.push(response as DEVArticle)
-            newlySyncedArticles.push(filePath)
+            if (response !== null) {
+              devtoArticles.push(response)
+              newlySyncedArticles.push(filePath)
+            }
             break
           } catch (err) {
             if (err instanceof Error) {
@@ -103,4 +112,4 @@ async function run(): Promise<void> {
   }
 }
 
-run()
+void run()
