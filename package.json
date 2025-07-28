@@ -39,7 +39,7 @@
     "eslint-plugin-github": "^6.0.0",
     "install": "^0.13.0",
     "js-yaml": "^4.1.0",
-    "npm": "^11.4.2",
+    "npm": "^11.5.1",
     "prettier": "3.6.2",
     "typescript": "^5.8.3",
     "vitest": "^3.0.0"
